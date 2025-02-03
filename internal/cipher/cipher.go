@@ -1,63 +1,50 @@
 package cipher
 
 import (
-	"errors"
-	"math"
+	"strings"
+
+	"github.com/Aleksandr-qefy/playfair-cipher/internal/keymatrix"
+	"github.com/Aleksandr-qefy/playfair-cipher/internal/model"
 )
 
-type pos [2]int
-
-func (p pos) i() int {
-	return p[0]
-}
-
-func (p pos) j() int {
-	return p[1]
-}
-
 type Cipher struct {
-	grid    [][]rune
-	charPos map[rune]pos
+	grid      [][]rune
+	positions map[rune]model.Pos
 }
 
 func New(chars []rune, n, m int, key string) (*Cipher, error) {
-	count := len(chars)
-	if count != n*m {
-		return nil, errors.New("chars count != n * m")
-	}
-
-	maxInt := math.MaxInt
-	charsOrder := make(map[rune]int, count)
-	for i := 0; i < count; i++ {
-		charsOrder[chars[i]] = maxInt - i
-	}
-
-	k := 0
-	for _, char := range chars {
-		if charsOrder[char] < k {
-			continue
-		}
-
-		charsOrder[char] = k
-		k++
-	}
-
-	grid := make([][]rune, n)
-	for i := 0; i < n; i++ {
-		grid[i] = make([]rune, m)
-	}
-
-	charPos := make(map[rune]pos, count)
-	for _, char := range chars {
-		k := charsOrder[char]
-		i := k / m
-		j := k % m
-		grid[i][j] = char
-		charPos[char] = pos{i, j}
+	grid, positions, err := keymatrix.Calculate(chars, n, m, key)
+	if err != nil {
+		return nil, err
 	}
 
 	return &Cipher{
-		grid:    grid,
-		charPos: charPos,
+		grid:      grid,
+		positions: positions,
 	}, nil
+}
+
+func (c *Cipher) String() string {
+	if c == nil {
+		return "nil"
+	}
+
+	n := len(c.grid)
+	sb := strings.Builder{}
+	for i := 0; i < n; i++ {
+		_, err := sb.WriteString(string(c.grid[i]))
+		if err != nil {
+			panic(err)
+		}
+
+		if i+1 < n {
+			sb.WriteByte('\n')
+		}
+	}
+
+	return sb.String()
+}
+
+func (c *Cipher) Code() {
+
 }
