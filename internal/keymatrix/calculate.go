@@ -3,7 +3,7 @@ package keymatrix
 import (
 	"errors"
 
-	"github.com/Aleksandr-qefy/playfair-cipher/internal/model"
+	"github.com/akaspb/playfair-cipher/internal/model"
 )
 
 func Calculate(chars []rune, n, m int, key string) (grid [][]rune, positions map[rune]model.Pos, err error) {

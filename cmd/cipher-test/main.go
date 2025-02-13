@@ -3,8 +3,9 @@ package main
 import (
 	"fmt"
 	"log"
+	"strings"
 
-	"github.com/Aleksandr-qefy/playfair-cipher/internal/cipher"
+	"github.com/akaspb/playfair-cipher/internal/cipher"
 )
 
 func main() {
@@ -31,6 +32,11 @@ func run() error {
 	}
 
 	fmt.Println(cipherService)
+	// fmt.Println(cipherService.Code(strings.ToLower("IDIOCYOFTENLOOKSLIKEINTELLIGENCE")))
+
+	fmt.Println(cipherService.Code(strings.ToLower("HIDETHEGOLDINTHETREXESTUMP")))
+	// BMODZ BXDNA BEKUD MUIXM MOUVI F
+	// bmodz bxdna bekud muixm mouvi f
 
 	return nil
 }
