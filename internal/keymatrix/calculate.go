@@ -6,16 +6,28 @@ import (
 	"github.com/akaspb/playfair-cipher/internal/model"
 )
 
-func Calculate(chars []rune, n, m int, key string) (grid [][]rune, positions map[rune]model.Pos, err error) {
+func Calculate(chars []rune, height, width int, key string) (grid [][]rune, positions map[rune]model.Pos, err error) {
+	if height < 2 {
+		return nil, nil, errors.New("[height] must be > 1")
+	}
+
+	if width < 2 {
+		return nil, nil, errors.New("[height] must be > 1")
+	}
+
 	count := len(chars)
-	if count != n*m {
-		return nil, nil, errors.New("chars count != n * m")
+	if count != height*width {
+		return nil, nil, errors.New("chars count != height * width")
+	}
+
+	if len(key) < 1 {
+		return nil, nil, errors.New("key must be non-empty string")
 	}
 
 	positions = make(map[rune]model.Pos, count)
-	grid = make([][]rune, n)
-	for i := 0; i < n; i++ {
-		grid[i] = make([]rune, m)
+	grid = make([][]rune, height)
+	for i := 0; i < height; i++ {
+		grid[i] = make([]rune, width)
 	}
 
 	q := 0
@@ -25,8 +37,8 @@ func Calculate(chars []rune, n, m int, key string) (grid [][]rune, positions map
 			continue
 		}
 
-		i := q / m
-		j := q % m
+		i := q / width
+		j := q % width
 		grid[i][j] = char
 		positions[char] = model.Pos{i, j}
 
@@ -39,12 +51,16 @@ func Calculate(chars []rune, n, m int, key string) (grid [][]rune, positions map
 			continue
 		}
 
-		i := q / m
-		j := q % m
+		i := q / width
+		j := q % width
 		grid[i][j] = char
 		positions[char] = model.Pos{i, j}
 
 		q++
+	}
+
+	if len(positions) != count {
+		return nil, nil, errors.New("some chars are duplicated")
 	}
 
 	return

@@ -3,9 +3,10 @@ package main
 import (
 	"fmt"
 	"log"
-	"strings"
 
 	"github.com/akaspb/playfair-cipher/internal/cipher"
+	"github.com/akaspb/playfair-cipher/internal/decipher"
+	"github.com/akaspb/playfair-cipher/internal/model"
 )
 
 func main() {
@@ -15,28 +16,41 @@ func main() {
 }
 
 func run() error {
-	cipherService, err := cipher.New(
-		[]rune{
+	cfg := model.GridConfig{
+		Chars: []rune{
 			'a', 'b', 'c', 'd', 'e',
 			'f', 'g', 'h', 'i', 'k',
 			'l', 'm', 'n', 'o', 'p',
 			'q', 'r', 's', 't', 'u',
 			'v', 'w', 'x', 'y', 'z',
 		},
-		5,
-		5,
-		"playfairexample",
-	)
+		Height: 5,
+		Width:  5,
+		Key:    "playfairexample",
+	}
+
+	cipherService, err := cipher.New(cfg)
 	if err != nil {
 		return err
 	}
 
-	fmt.Println(cipherService)
-	// fmt.Println(cipherService.Code(strings.ToLower("IDIOCYOFTENLOOKSLIKEINTELLIGENCE")))
+	input := "thisistest" // "thisistest"
+	cphr, err := cipherService.Code(input, 'q')
+	if err != nil {
+		return err
+	}
+	fmt.Println(cphr)
 
-	fmt.Println(cipherService.Code(strings.ToLower("HIDETHEGOLDINTHETREXESTUMP")))
-	// BMODZ BXDNA BEKUD MUIXM MOUVI F
-	// bmodz bxdna bekud muixm mouvi f
+	decipherService, err := decipher.New(cfg)
+	if err != nil {
+		return err
+	}
+
+	dcphr, err := decipherService.Decode(cphr, 'q')
+	if err != nil {
+		return err
+	}
+	fmt.Println(dcphr)
 
 	return nil
 }
