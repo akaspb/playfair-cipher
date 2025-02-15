@@ -21,16 +21,20 @@ func Calculate(chars []rune, height, width int, key string) (grid [][]rune, posi
 	}
 
 	if len(key) < 1 {
-		return nil, nil, errors.New("key must be non-empty string")
+		return nil, nil, errors.New("[key] must be non-empty string")
 	}
 
-	positions = make(map[rune]model.Pos, count)
+	if !isWordConsistOfChars(chars, key) {
+		return nil, nil, errors.New("[key] must consist of [chars]")
+	}
+
 	grid = make([][]rune, height)
 	for i := 0; i < height; i++ {
 		grid[i] = make([]rune, width)
 	}
 
 	q := 0
+	positions = make(map[rune]model.Pos, count)
 	for _, char := range key {
 		_, ok := positions[char]
 		if ok {
@@ -59,9 +63,24 @@ func Calculate(chars []rune, height, width int, key string) (grid [][]rune, posi
 		q++
 	}
 
-	if len(positions) != count {
+	if len(positions) < count {
 		return nil, nil, errors.New("some chars are duplicated")
 	}
 
 	return
+}
+
+func isWordConsistOfChars(chars []rune, word string) bool {
+	set := make(map[rune]struct{}, len(chars))
+	for _, char := range chars {
+		set[char] = struct{}{}
+	}
+
+	for _, char := range word {
+		if _, ok := set[char]; !ok {
+			return false
+		}
+	}
+
+	return true
 }

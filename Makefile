@@ -1,4 +1,5 @@
 EXEC_PATH=bin/playfair
+EXEC_PATH_WIN=bin/playfair.exe
 
 build:
 	go build -o ${EXEC_PATH} cmd/cipher-test/main.go
@@ -7,3 +8,9 @@ run:
 	./${EXEC_PATH}
 
 full: build run
+
+conf:
+	go run cmd/make-config/main.go
+
+win:
+	GOOS=windows GOARCH=386 go build -o ${EXEC_PATH_WIN} cmd/cipher-test/main.go

@@ -5,8 +5,8 @@ import (
 	"log"
 
 	"github.com/akaspb/playfair-cipher/internal/cipher"
+	"github.com/akaspb/playfair-cipher/internal/config"
 	"github.com/akaspb/playfair-cipher/internal/decipher"
-	"github.com/akaspb/playfair-cipher/internal/model"
 )
 
 func main() {
@@ -16,20 +16,12 @@ func main() {
 }
 
 func run() error {
-	cfg := model.GridConfig{
-		Chars: []rune{
-			'a', 'b', 'c', 'd', 'e',
-			'f', 'g', 'h', 'i', 'k',
-			'l', 'm', 'n', 'o', 'p',
-			'q', 'r', 's', 't', 'u',
-			'v', 'w', 'x', 'y', 'z',
-		},
-		Height: 5,
-		Width:  5,
-		Key:    "playfairexample",
+	cfg, err := config.LoadConfigFile()
+	if err != nil {
+		return fmt.Errorf("could't load config: %w", err)
 	}
 
-	cipherService, err := cipher.New(cfg)
+	cipherService, err := cipher.New(cfg.GridConfig)
 	if err != nil {
 		return err
 	}
@@ -41,7 +33,7 @@ func run() error {
 	}
 	fmt.Println(cphr)
 
-	decipherService, err := decipher.New(cfg)
+	decipherService, err := decipher.New(cfg.GridConfig)
 	if err != nil {
 		return err
 	}
