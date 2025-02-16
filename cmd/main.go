@@ -11,9 +11,10 @@ import (
 )
 
 const (
-	cipherTab = "Cipher"
-	configTab = "Config"
-	aboutTab  = "About"
+	cipherTab   = "  Cipher   "
+	decipherTab = "   Decipher  "
+	configTab   = "  Config  "
+	aboutTab    = "  About  "
 )
 
 func main() {
@@ -28,11 +29,12 @@ func run() error {
 		return err
 	}
 
-	tabNames := []string{cipherTab, configTab, aboutTab}
+	tabNames := []string{cipherTab, decipherTab, configTab, aboutTab}
 	tabs := map[string]tab.Tab{
-		cipherTab: tab.NewAbout(),
-		configTab: tab.NewConfig(&cfg),
-		aboutTab:  tab.NewAbout(),
+		cipherTab:   tab.NewAbout(),
+		decipherTab: tab.NewAbout(),
+		configTab:   tab.NewConfig(&cfg),
+		aboutTab:    tab.NewAbout(),
 	}
 	m := app{TabNames: tabNames, Tabs: tabs}
 

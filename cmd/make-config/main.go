@@ -23,6 +23,7 @@ func main() {
 			Width:  5,
 			Key:    "playfairexample",
 		},
+		Separator: '#',
 	}
 
 	if err := config.CreateConfigFile(cfg); err != nil {
