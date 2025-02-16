@@ -2,7 +2,7 @@ EXEC_PATH=bin/playfair
 EXEC_PATH_WIN=bin/playfair.exe
 
 build:
-	go build -o ${EXEC_PATH} cmd/cipher-test/main.go
+	go build -o ${EXEC_PATH} cmd/main.go
 
 run:
 	./${EXEC_PATH}

@@ -26,8 +26,8 @@ func run() error {
 		return err
 	}
 
-	input := "thisistest" // "thisistest"
-	cphr, err := cipherService.Code(input, 'q')
+	input := "hello! this is test message!" // "thisistest"
+	cphr, err := cipherService.Code(input, '#')
 	if err != nil {
 		return err
 	}
@@ -38,7 +38,7 @@ func run() error {
 		return err
 	}
 
-	dcphr, err := decipherService.Decode(cphr, 'q')
+	dcphr, err := decipherService.Decode(cphr, '#')
 	if err != nil {
 		return err
 	}

@@ -25,9 +25,14 @@
       119,
       120,
       121,
-      122
+      122,
+      32,
+      44,
+      46,
+      33,
+      35
     ],
-    "height": 5,
+    "height": 6,
     "width": 5,
     "key": "playfairexample"
   }

@@ -47,6 +47,10 @@ func (c *Cipher) String() string {
 }
 
 func (c *Cipher) Code(text string, separator rune) (string, error) {
+	if strings.ContainsRune(text, separator) {
+		return "", fmt.Errorf("[text] must not contain [separator] '%c'", separator)
+	}
+
 	if _, ok := c.positions[separator]; !ok {
 		return "", fmt.Errorf("[separator] '%c' not in grid", separator)
 	}
