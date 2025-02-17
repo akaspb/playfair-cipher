@@ -2,11 +2,13 @@ package tab
 
 import tea "github.com/charmbracelet/bubbletea"
 
-type About struct{}
-
 func NewAbout() About {
 	return About{}
 }
+
+var _ Tab = &About{}
+
+type About struct{}
 
 func (a About) Update(tea.Msg) {}
 

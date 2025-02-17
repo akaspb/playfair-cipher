@@ -69,7 +69,7 @@ func (d *Decipher) Decode(cipherText string, separator rune) (string, error) {
 		}
 
 		if pos1 == pos2 {
-			panic("pos1 == pos2")
+			return "", errors.New("incorrect ciphered text")
 		}
 
 		pos1To, pos2To := procPair(pos1, pos2, height, width)

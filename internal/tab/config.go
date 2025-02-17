@@ -11,6 +11,7 @@ import (
 	"github.com/akaspb/playfair-cipher/internal/model"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 )
 
 type inputIdx int
@@ -23,13 +24,23 @@ const (
 	widthIn
 )
 
-func NewConfig(config *model.Config) *Config {
+var (
+	focusedStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
+	cursorStyle  = focusedStyle
+)
+
+func NewConfig(configHandler func(model.Config)) *Config {
 	key := textinput.New()
 	{
 		key.Placeholder = "Key"
 		key.Prompt = "> "
 		key.CharLimit = 100
 		key.Width = 50
+
+		key.Cursor.Style = cursorStyle
+		key.PromptStyle = focusedStyle
+		key.TextStyle = focusedStyle
+
 		key.Focus()
 	}
 
@@ -39,6 +50,10 @@ func NewConfig(config *model.Config) *Config {
 		abc.Prompt = "> "
 		abc.CharLimit = 100
 		abc.Width = 50
+
+		abc.Cursor.Style = cursorStyle
+		abc.PromptStyle = focusedStyle
+		abc.TextStyle = focusedStyle
 	}
 
 	sep := textinput.New()
@@ -47,6 +62,10 @@ func NewConfig(config *model.Config) *Config {
 		sep.Prompt = "> "
 		sep.CharLimit = 1
 		sep.Width = 10
+
+		sep.Cursor.Style = cursorStyle
+		sep.PromptStyle = focusedStyle
+		sep.TextStyle = focusedStyle
 	}
 
 	width := textinput.New()
@@ -55,6 +74,10 @@ func NewConfig(config *model.Config) *Config {
 		width.Prompt = ""
 		width.CharLimit = 2
 		width.Width = 2
+
+		width.Cursor.Style = cursorStyle
+		width.PromptStyle = focusedStyle
+		width.TextStyle = focusedStyle
 	}
 
 	height := textinput.New()
@@ -63,10 +86,14 @@ func NewConfig(config *model.Config) *Config {
 		height.Prompt = ""
 		height.CharLimit = 2
 		height.Width = 2
+
+		height.Cursor.Style = cursorStyle
+		height.PromptStyle = focusedStyle
+		height.TextStyle = focusedStyle
 	}
 
 	c := &Config{
-		config: config,
+		configHandler: configHandler,
 		textInputs: map[inputIdx]*textinput.Model{
 			keyIn:    &key,
 			sepIn:    &sep,
@@ -81,24 +108,30 @@ func NewConfig(config *model.Config) *Config {
 	return c
 }
 
-func (c *Config) loadConfig() {
+func (c *Config) loadConfig() error {
 	cfg, err := configfile.LoadConfigFile()
 	if err != nil {
-		panic(err)
+		return err
 	}
+
+	c.configHandler(cfg)
 
 	c.textInputs[keyIn].SetValue(cfg.GridConfig.Key)
 	c.textInputs[sepIn].SetValue(string([]rune{cfg.Separator}))
 	c.textInputs[abcIn].SetValue(string(cfg.GridConfig.Chars))
 	c.textInputs[widthIn].SetValue(strconv.Itoa(cfg.GridConfig.Height))
 	c.textInputs[heightIn].SetValue(strconv.Itoa(cfg.GridConfig.Width))
+
+	return nil
 }
 
+var _ Tab = &Config{}
+
 type Config struct {
-	config     *model.Config
-	textInputs map[inputIdx]*textinput.Model
-	inputIdx   inputIdx
-	saveRes    string
+	configHandler func(model.Config)
+	textInputs    map[inputIdx]*textinput.Model
+	inputIdx      inputIdx
+	saveRes       string
 }
 
 func (c *Config) Update(msg tea.Msg) {
@@ -178,7 +211,7 @@ func (c *Config) saveConfig() error {
 		return err
 	}
 
-	if err := config.CreateConfigFile(model.Config{
+	cfg := model.Config{
 		GridConfig: model.GridConfig{
 			Chars:  []rune(abc),
 			Height: height,
@@ -186,9 +219,13 @@ func (c *Config) saveConfig() error {
 			Key:    key,
 		},
 		Separator: []rune(sep)[0],
-	}); err != nil {
+	}
+
+	if err := config.CreateConfigFile(cfg); err != nil {
 		log.Fatal(fmt.Errorf("error during creating config file: %w", err))
 	}
+
+	c.configHandler(cfg)
 
 	return nil
 }

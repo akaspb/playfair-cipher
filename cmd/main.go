@@ -4,17 +4,19 @@ import (
 	"log"
 	"strings"
 
-	"github.com/akaspb/playfair-cipher/internal/config"
+	"github.com/akaspb/playfair-cipher/internal/cipher"
+	"github.com/akaspb/playfair-cipher/internal/decipher"
+	"github.com/akaspb/playfair-cipher/internal/model"
 	"github.com/akaspb/playfair-cipher/internal/tab"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
 
 const (
-	cipherTab   = "  Cipher   "
-	decipherTab = "   Decipher  "
-	configTab   = "  Config  "
-	aboutTab    = "  About  "
+	cipherName   = "  Cipher   "
+	decipherName = "   Decipher  "
+	configName   = "  Config  "
+	aboutName    = "  About  "
 )
 
 func main() {
@@ -24,28 +26,38 @@ func main() {
 }
 
 func run() error {
-	cfg, err := config.LoadConfigFile()
-	if err != nil {
-		return err
+	var err1, err2 error
+	var cipherService *cipher.Cipher
+	var decipherService *decipher.Decipher
+	configTab := tab.NewConfig(func(cfg model.Config) {
+		cipherService, err1 = cipher.New(cfg.GridConfig)
+		decipherService, err2 = decipher.New(cfg.GridConfig)
+	})
+	if err1 != nil {
+		return err1
+	}
+	if err2 != nil {
+		return err2
 	}
 
-	tabNames := []string{cipherTab, decipherTab, configTab, aboutTab}
+	tabNames := []string{cipherName, decipherName, configName, aboutName}
 	tabs := map[string]tab.Tab{
-		cipherTab:   tab.NewAbout(),
-		decipherTab: tab.NewAbout(),
-		configTab:   tab.NewConfig(&cfg),
-		aboutTab:    tab.NewAbout(),
+		cipherName:   tab.NewCipher(cipherService),
+		decipherName: tab.NewDecipher(decipherService),
+		configName:   configTab,
+		aboutName:    tab.NewAbout(),
 	}
-	m := app{TabNames: tabNames, Tabs: tabs}
+	m := app{CipherService: cipherService, TabNames: tabNames, Tabs: tabs}
 
-	_, err = tea.NewProgram(m, tea.WithAltScreen()).Run()
+	_, err := tea.NewProgram(m, tea.WithAltScreen()).Run()
 	return err
 }
 
 type app struct {
-	TabNames  []string
-	Tabs      map[string]tab.Tab
-	activeTab int
+	CipherService *cipher.Cipher
+	TabNames      []string
+	Tabs          map[string]tab.Tab
+	activeTab     int
 }
 
 func (a app) Init() tea.Cmd { return nil }
