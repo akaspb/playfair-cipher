@@ -89,9 +89,11 @@ func (c *Cipher) Code(text string, separator rune) (string, error) {
 }
 
 func getPairs(text string, sep rune) []rune {
-	res := make([]rune, 0, 2*len(text))
+	chars := []rune(text)
+
+	res := make([]rune, 0, 2*len(chars))
 	var prevChar rune
-	for _, char := range text {
+	for _, char := range chars {
 		if len(res)%2 == 0 {
 			res = append(res, char)
 			prevChar = char

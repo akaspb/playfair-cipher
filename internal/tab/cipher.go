@@ -72,7 +72,8 @@ Result:
 %s
 Result:
 %s
-`,
+
+(ctrl+s to save result to buffer)`,
 		c.ti.View(),
 		c.to.View(),
 	)

@@ -48,11 +48,11 @@ func (d *Decipher) String() string {
 }
 
 func (d *Decipher) Decode(cipherText string, separator rune) (string, error) {
-	if len(cipherText)%2 == 1 {
+	pairs := []rune(cipherText)
+
+	if len(pairs)%2 == 1 {
 		return "", errors.New("[cipherText] must be even-length string")
 	}
-
-	pairs := []rune(cipherText)
 
 	height, width := len(d.grid), len(d.grid[0])
 	decipherPairs := make([]rune, 0, len(pairs))

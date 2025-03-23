@@ -20,7 +20,7 @@ func Calculate(chars []rune, height, width int, key string) (grid [][]rune, posi
 		return nil, nil, errors.New("chars count != height * width")
 	}
 
-	if len(key) < 1 {
+	if key == "" {
 		return nil, nil, errors.New("[key] must be non-empty string")
 	}
 
