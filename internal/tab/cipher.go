@@ -99,8 +99,8 @@ Result:
 %s
 Result:
 %s
-
-(ctrl+v / ctrl+s to load / save result to buffer)`,
+            (ctrl+v to load from clipboard)
+             (ctrl+s to save to clipboard)`,
 		c.ti.View(),
 		c.to.View(),
 	)

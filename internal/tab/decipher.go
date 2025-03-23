@@ -89,8 +89,7 @@ func (d *Decipher) View() string {
 %s
 Result:
 * %s
-
-(ctrl+v / ctrl+s to load / save result to buffer)`,
+`,
 			d.ti.View(),
 			d.err.Error(),
 		)
@@ -100,7 +99,8 @@ Result:
 %s
 Result:
 %s
-`,
+            (ctrl+v to load from clipboard)
+             (ctrl+s to save to clipboard)`,
 		d.ti.View(),
 		d.to.View(),
 	)
