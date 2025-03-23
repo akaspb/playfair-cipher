@@ -177,23 +177,23 @@ func (c *Config) saveConfig() error {
 		abc = c.textInputs[abcIn].Value()
 	)
 
-	if err := textFieldValidator(key, "key"); err != nil {
+	if err := textFieldValidator(key, "Парольная фраза"); err != nil {
 		return err
 	}
 
-	if err := textFieldValidator(sep, "separator"); err != nil {
+	if err := textFieldValidator(sep, "Заполняющий символ"); err != nil {
 		return err
 	}
 
-	if err := textFieldValidator(abc, "abc"); err != nil {
+	if err := textFieldValidator(abc, "Алфавит"); err != nil {
 		return err
 	}
 
-	if err := numFieldValidator(c.textInputs[heightIn].Value(), "height"); err != nil {
+	if err := numFieldValidator(c.textInputs[heightIn].Value(), "Высота матрицы"); err != nil {
 		return err
 	}
 
-	if err := numFieldValidator(c.textInputs[widthIn].Value(), "width"); err != nil {
+	if err := numFieldValidator(c.textInputs[widthIn].Value(), "Широта матрицы"); err != nil {
 		return err
 	}
 
@@ -242,7 +242,8 @@ func (c *Config) View() string {
 Высота матрицы: %s %s
 Широта матрицы:  %s %s
 
-   (ctrl+s to save configs) (ctrl+z to reload configs)
+              (ctrl+s - сохранить изменения)
+              (ctrl+z - сбросить  изменения)    
 %s`,
 		c.textInputs[keyIn].View(), c.textInputs[keyIn].Position(), errorToText(textFieldValidator(c.textInputs[keyIn].Value(), "Парольная фраза")),
 		c.textInputs[sepIn].View(), errorToText(textFieldValidator(c.textInputs[sepIn].Value(), "Заполняющий символ")),
