@@ -5,7 +5,6 @@ import (
 	"log"
 	"strconv"
 
-	"github.com/akaspb/playfair-cipher/internal/config"
 	configfile "github.com/akaspb/playfair-cipher/internal/config"
 	"github.com/akaspb/playfair-cipher/internal/keymatrix"
 	"github.com/akaspb/playfair-cipher/internal/model"
@@ -220,7 +219,7 @@ func (c *Config) saveConfig() error {
 		Separator: &[]rune(sep)[0],
 	}
 
-	if err := config.CreateConfigFile(cfg); err != nil {
+	if err := configfile.CreateConfigFile(cfg); err != nil {
 		log.Fatal(fmt.Errorf("error during creating config file: %w", err))
 	}
 
