@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/akaspb/playfair-cipher/internal/decipher"
+	"github.com/atotto/clipboard"
 	"github.com/charmbracelet/bubbles/textarea"
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -45,6 +46,28 @@ type Decipher struct {
 func (d *Decipher) Update(msg tea.Msg) {
 	d.ti, _ = d.ti.Update(msg)
 
+	var (
+		ctrlV = false
+		ctrlS = false
+	)
+
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch keypress := msg.String(); keypress {
+		case "ctrl+v":
+			ctrlV = true
+		case "ctrl+s":
+			ctrlS = true
+		}
+	}
+
+	if ctrlV {
+		buff, err := clipboard.ReadAll()
+		if err == nil {
+			d.ti.SetValue(buff)
+		}
+	}
+
 	deciphered, err := d.decipherService.Decode(d.ti.Value(), *d.separator)
 	if err != nil {
 		d.err = err
@@ -53,6 +76,10 @@ func (d *Decipher) Update(msg tea.Msg) {
 	d.err = nil
 
 	d.to.SetValue(deciphered)
+
+	if ctrlS {
+		clipboard.WriteAll(deciphered)
+	}
 }
 
 func (d *Decipher) View() string {
@@ -62,7 +89,8 @@ func (d *Decipher) View() string {
 %s
 Result:
 * %s
-`,
+
+(ctrl+v / ctrl+s to load / save result to buffer)`,
 			d.ti.View(),
 			d.err.Error(),
 		)
