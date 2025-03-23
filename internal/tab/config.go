@@ -29,7 +29,7 @@ var (
 	cursorStyle  = focusedStyle
 )
 
-func NewConfig(configHandler func(model.Config)) *Config {
+func NewConfig() *Config {
 	key := textinput.New()
 	{
 		key.Placeholder = "Key"
@@ -93,7 +93,6 @@ func NewConfig(configHandler func(model.Config)) *Config {
 	}
 
 	c := &Config{
-		configHandler: configHandler,
 		textInputs: map[inputIdx]*textinput.Model{
 			keyIn:    &key,
 			sepIn:    &sep,
@@ -114,13 +113,13 @@ func (c *Config) loadConfig() error {
 		return err
 	}
 
-	c.configHandler(cfg)
+	c.CipherCfg = &cfg
 
 	c.textInputs[keyIn].SetValue(cfg.GridConfig.Key)
-	c.textInputs[sepIn].SetValue(string([]rune{cfg.Separator}))
+	c.textInputs[sepIn].SetValue(string([]rune{*cfg.Separator}))
 	c.textInputs[abcIn].SetValue(string(cfg.GridConfig.Chars))
-	c.textInputs[widthIn].SetValue(strconv.Itoa(cfg.GridConfig.Height))
-	c.textInputs[heightIn].SetValue(strconv.Itoa(cfg.GridConfig.Width))
+	c.textInputs[widthIn].SetValue(strconv.Itoa(cfg.GridConfig.Width))
+	c.textInputs[heightIn].SetValue(strconv.Itoa(cfg.GridConfig.Height))
 
 	return nil
 }
@@ -128,10 +127,10 @@ func (c *Config) loadConfig() error {
 var _ Tab = &Config{}
 
 type Config struct {
-	configHandler func(model.Config)
-	textInputs    map[inputIdx]*textinput.Model
-	inputIdx      inputIdx
-	saveRes       string
+	textInputs map[inputIdx]*textinput.Model
+	inputIdx   inputIdx
+	saveRes    string
+	CipherCfg  *model.Config
 }
 
 func (c *Config) Update(msg tea.Msg) {
@@ -212,20 +211,20 @@ func (c *Config) saveConfig() error {
 	}
 
 	cfg := model.Config{
-		GridConfig: model.GridConfig{
+		GridConfig: &model.GridConfig{
 			Chars:  []rune(abc),
 			Height: height,
 			Width:  width,
 			Key:    key,
 		},
-		Separator: []rune(sep)[0],
+		Separator: &[]rune(sep)[0],
 	}
 
 	if err := config.CreateConfigFile(cfg); err != nil {
 		log.Fatal(fmt.Errorf("error during creating config file: %w", err))
 	}
 
-	c.configHandler(cfg)
+	c.CipherCfg = &cfg
 
 	return nil
 }
@@ -244,9 +243,8 @@ Write ABC:
 Height: %s %s
 Width:  %s %s
 
-(ctrl+s to save configs) (ctrl+z to reload configs)
-%s
-`,
+   (ctrl+s to save configs) (ctrl+z to reload configs)
+%s`,
 		c.textInputs[keyIn].View(), c.textInputs[keyIn].Position(), errorToText(textFieldValidator(c.textInputs[keyIn].Value(), "key")),
 		c.textInputs[sepIn].View(), errorToText(textFieldValidator(c.textInputs[sepIn].Value(), "separator")),
 		c.textInputs[abcIn].View(), c.textInputs[abcIn].Position(), errorToText(textFieldValidator(c.textInputs[abcIn].Value(), "abc")),

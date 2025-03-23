@@ -8,7 +8,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-func NewCipher(cipherService *cipher.Cipher) *Cipher {
+func NewCipher(cipherService *cipher.Cipher, separator *rune) *Cipher {
 	ti := textarea.New()
 	ti.Placeholder = "Write your text hear"
 	ti.SetHeight(8)
@@ -24,8 +24,10 @@ func NewCipher(cipherService *cipher.Cipher) *Cipher {
 
 	return &Cipher{
 		cipherService: cipherService,
-		ti:            ti,
-		to:            to,
+		separator:     separator,
+
+		ti: ti,
+		to: to,
 	}
 }
 
@@ -33,15 +35,17 @@ var _ Tab = &Cipher{}
 
 type Cipher struct {
 	cipherService *cipher.Cipher
-	ti            textarea.Model
-	to            textarea.Model
-	err           error
+	separator     *rune
+
+	ti  textarea.Model
+	to  textarea.Model
+	err error
 }
 
 func (c *Cipher) Update(msg tea.Msg) {
 	c.ti, _ = c.ti.Update(msg)
 
-	ciphered, err := c.cipherService.Code(c.ti.Value(), '#')
+	ciphered, err := c.cipherService.Code(c.ti.Value(), *c.separator)
 	if err != nil {
 		c.err = err
 		return

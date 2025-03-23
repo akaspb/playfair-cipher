@@ -13,7 +13,7 @@ type Cipher struct {
 	positions map[rune]model.Pos
 }
 
-func New(cfg model.GridConfig) (*Cipher, error) {
+func New(cfg *model.GridConfig) (*Cipher, error) {
 	grid, positions, err := keymatrix.Calculate(cfg.Chars, cfg.Height, cfg.Width, cfg.Key)
 	if err != nil {
 		return nil, fmt.Errorf("error during grid making: %w", err)

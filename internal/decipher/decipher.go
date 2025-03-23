@@ -14,7 +14,7 @@ type Decipher struct {
 	positions map[rune]model.Pos
 }
 
-func New(cfg model.GridConfig) (*Decipher, error) {
+func New(cfg *model.GridConfig) (*Decipher, error) {
 	grid, positions, err := keymatrix.Calculate(cfg.Chars, cfg.Height, cfg.Width, cfg.Key)
 	if err != nil {
 		return nil, fmt.Errorf("error during grid making: %w", err)
@@ -75,8 +75,6 @@ func (d *Decipher) Decode(cipherText string, separator rune) (string, error) {
 		pos1To, pos2To := procPair(pos1, pos2, height, width)
 		char1To := d.grid[pos1To.I()][pos1To.J()]
 		char2To := d.grid[pos2To.I()][pos2To.J()]
-
-		// fmt.Printf("%c %c -> %c %c\height", char1, char2, char1To, char2To)
 
 		decipherPairs = append(decipherPairs, char1To, char2To)
 	}

@@ -9,8 +9,10 @@ import (
 )
 
 func main() {
+	separator := '#'
+
 	cfg := model.Config{
-		GridConfig: model.GridConfig{
+		GridConfig: &model.GridConfig{
 			Chars: []rune{
 				'a', 'b', 'c', 'd', 'e',
 				'f', 'g', 'h', 'i', 'k',
@@ -23,7 +25,7 @@ func main() {
 			Width:  5,
 			Key:    "playfairexample",
 		},
-		Separator: '#',
+		Separator: &separator,
 	}
 
 	if err := config.CreateConfigFile(cfg); err != nil {

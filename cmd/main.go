@@ -6,7 +6,6 @@ import (
 
 	"github.com/akaspb/playfair-cipher/internal/cipher"
 	"github.com/akaspb/playfair-cipher/internal/decipher"
-	"github.com/akaspb/playfair-cipher/internal/model"
 	"github.com/akaspb/playfair-cipher/internal/tab"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -26,30 +25,28 @@ func main() {
 }
 
 func run() error {
-	var err1, err2 error
-	var cipherService *cipher.Cipher
-	var decipherService *decipher.Decipher
-	configTab := tab.NewConfig(func(cfg model.Config) {
-		cipherService, err1 = cipher.New(cfg.GridConfig)
-		decipherService, err2 = decipher.New(cfg.GridConfig)
-	})
-	if err1 != nil {
-		return err1
+	configTab := tab.NewConfig()
+
+	cipherService, err := cipher.New(configTab.CipherCfg.GridConfig)
+	if err != nil {
+		return err
 	}
-	if err2 != nil {
-		return err2
+
+	decipherService, err := decipher.New(configTab.CipherCfg.GridConfig)
+	if err != nil {
+		return err
 	}
 
 	tabNames := []string{cipherName, decipherName, configName, aboutName}
 	tabs := map[string]tab.Tab{
-		cipherName:   tab.NewCipher(cipherService),
-		decipherName: tab.NewDecipher(decipherService),
+		cipherName:   tab.NewCipher(cipherService, configTab.CipherCfg.Separator),
+		decipherName: tab.NewDecipher(decipherService, configTab.CipherCfg.Separator),
 		configName:   configTab,
 		aboutName:    tab.NewAbout(),
 	}
 	m := app{CipherService: cipherService, TabNames: tabNames, Tabs: tabs}
 
-	_, err := tea.NewProgram(m, tea.WithAltScreen()).Run()
+	_, err = tea.NewProgram(m, tea.WithAltScreen()).Run()
 	return err
 }
 
@@ -95,7 +92,7 @@ var (
 	highlightColor    = lipgloss.AdaptiveColor{Light: "#874BFD", Dark: "#7D56F4"}
 	inactiveTabStyle  = lipgloss.NewStyle().Border(inactiveTabBorder, true).BorderForeground(highlightColor).Padding(0, 1)
 	activeTabStyle    = inactiveTabStyle.Border(activeTabBorder, true)
-	windowStyle       = lipgloss.NewStyle().BorderForeground(highlightColor).Padding(2, 0).Align(lipgloss.Left).Border(lipgloss.NormalBorder()).UnsetBorderTop()
+	windowStyle       = lipgloss.NewStyle().BorderForeground(highlightColor).Padding(1, 0).Align(lipgloss.Left).Border(lipgloss.NormalBorder()).UnsetBorderTop()
 )
 
 func (a app) View() string {
@@ -128,7 +125,16 @@ func (a app) View() string {
 	row := lipgloss.JoinHorizontal(lipgloss.Top, renderedTabs...)
 	doc.WriteString(row)
 	doc.WriteString("\n")
-	doc.WriteString(windowStyle.Width((lipgloss.Width(row) - windowStyle.GetHorizontalFrameSize())).Render(a.Tabs[a.TabNames[a.activeTab]].View()))
+
+	tabRendered := windowStyle.Width((lipgloss.Width(row) - windowStyle.GetHorizontalFrameSize())).Render(
+		a.Tabs[a.TabNames[a.activeTab]].View(),
+		"\n\n (tab to move next tab) (shift+tab to move previous tab)",
+		"\n                     (esc to exit)",
+	)
+
+	doc.WriteString(tabRendered)
+	doc.WriteString("\n")
+
 	return docStyle.Render(doc.String())
 }
 
@@ -145,96 +151,3 @@ func min(a, b int) int {
 	}
 	return b
 }
-
-// // A simple program demonstrating the text input component from the Bubbles
-// // component library.
-
-// import (
-// 	"fmt"
-// 	"log"
-
-// 	"github.com/charmbracelet/bubbles/textinput"
-// 	app "github.com/charmbracelet/bubbletea"
-// )
-
-// // // Model contains the program's state as well as its core functions.
-// // type Model interface {
-// // 	// Init is the first function that will be called. It returns an optional
-// // 	// initial command. To not perform an initial command return nil.
-// // 	Init() Cmd
-
-// // 	// Update is called when a message is received. Use it to inspect messages
-// // 	// and, in response, update the model and/or send a command.
-// // 	Update(Msg) (Model, Cmd)
-
-// // 	// View renders the program's UI, which is just a string. The view is
-// // 	// rendered after every Update.
-// // 	View() string
-// // }
-
-// type stateT uint8
-
-// const (
-// 	stateInputKey = stateT(iota)
-// 	stateCipherProgram
-// )
-
-// func main() {
-// 	p := app.NewProgram(initialModel(), app.WithAltScreen())
-// 	if _, err := p.Run(); err != nil {
-// 		log.Fatal(err)
-// 	}
-// }
-
-// type model struct {
-// 	textInput textinput.Model
-// 	err       error
-// 	state     stateT
-// }
-
-// func initialModel() model {
-// 	ti := textinput.New()
-// 	ti.Placeholder = "Шифротекст"
-// 	ti.Focus()
-// 	ti.CharLimit = 156
-// 	ti.Width = 20
-
-// 	return model{
-// 		textInput: ti,
-// 		err:       nil,
-// 	}
-// }
-
-// func (m model) Init() app.Cmd {
-// 	return textinput.Blink
-// }
-
-// func (m model) Update(msg app.Msg) (app.Model, app.Cmd) {
-// 	var cmd app.Cmd
-
-// 	switch msg := msg.(type) {
-// 	case app.KeyMsg:
-// 		switch msg.Type {
-// 		case app.KeyCtrlC, app.KeyEsc:
-// 			return m, app.Quit
-// 		}
-
-// 	case error:
-// 		m.err = msg
-// 		return m, nil
-// 	}
-
-// 	m.textInput, cmd = m.textInput.Update(msg)
-// 	return m, cmd
-// }
-
-// func (m model) View() string {
-// 	switch m.state {
-
-// 	}
-// 	return fmt.Sprintf(
-// 		"Введите шифротекст\n\n%s\n\n%s",
-// 		m.textInput.View(),
-// 		"(esc для выхода)",
-// 	) + "\n"
-// }

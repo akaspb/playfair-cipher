@@ -8,7 +8,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-func NewDecipher(decipherService *decipher.Decipher) *Decipher {
+func NewDecipher(decipherService *decipher.Decipher, separator *rune) *Decipher {
 	ti := textarea.New()
 	ti.Placeholder = "Write your ciphered text"
 	ti.SetHeight(8)
@@ -24,8 +24,10 @@ func NewDecipher(decipherService *decipher.Decipher) *Decipher {
 
 	return &Decipher{
 		decipherService: decipherService,
-		ti:              ti,
-		to:              to,
+		separator:       separator,
+
+		ti: ti,
+		to: to,
 	}
 }
 
@@ -33,15 +35,17 @@ var _ Tab = &Decipher{}
 
 type Decipher struct {
 	decipherService *decipher.Decipher
-	ti              textarea.Model
-	to              textarea.Model
-	err             error
+	separator       *rune
+
+	ti  textarea.Model
+	to  textarea.Model
+	err error
 }
 
 func (d *Decipher) Update(msg tea.Msg) {
 	d.ti, _ = d.ti.Update(msg)
 
-	deciphered, err := d.decipherService.Decode(d.ti.Value(), '#')
+	deciphered, err := d.decipherService.Decode(d.ti.Value(), *d.separator)
 	if err != nil {
 		d.err = err
 		return

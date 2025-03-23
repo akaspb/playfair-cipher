@@ -1,8 +1,8 @@
 package model
 
 type Config struct {
-	GridConfig GridConfig `json:"grid_config"`
-	Separator  rune       `json:"separator"`
+	GridConfig *GridConfig `json:"grid_config"`
+	Separator  *rune       `json:"separator"`
 }
 
 type GridConfig struct {
