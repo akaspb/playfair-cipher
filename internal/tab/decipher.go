@@ -18,7 +18,7 @@ func NewDecipher(decipherService *decipher.Decipher, separator *rune) *Decipher 
 	ti.Focus()
 
 	to := textarea.New()
-	to.Placeholder = "Расшифрованный текст"
+	to.Placeholder = ""
 	to.SetHeight(8)
 	to.SetWidth(50)
 	ti.CharLimit = 500
