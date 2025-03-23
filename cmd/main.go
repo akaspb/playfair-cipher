@@ -12,10 +12,10 @@ import (
 )
 
 const (
-	cipherName   = "  Cipher   "
-	decipherName = "   Decipher  "
-	configName   = "  Config  "
-	aboutName    = "  About  "
+	cipherName   = "Шифрование"
+	decipherName = "Расшифрование"
+	configName   = "Настройки"
+	aboutName    = "О программе"
 )
 
 func main() {
@@ -128,8 +128,8 @@ func (a app) View() string {
 
 	tabRendered := windowStyle.Width((lipgloss.Width(row) - windowStyle.GetHorizontalFrameSize())).Render(
 		a.Tabs[a.TabNames[a.activeTab]].View(),
-		"\n\n (tab to move next tab) (shift+tab to move previous tab)",
-		"\n                     (esc to exit)",
+		"\n\n(tab - следующая вкладка)(shift+tab - предыдущая вкладка)",
+		"\n               (esc - выход из программы)",
 	)
 
 	doc.WriteString(tabRendered)

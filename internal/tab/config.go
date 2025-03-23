@@ -31,7 +31,7 @@ var (
 func NewConfig() *Config {
 	key := textinput.New()
 	{
-		key.Placeholder = "Key"
+		key.Placeholder = "Парольная фраза"
 		key.Prompt = "> "
 		key.CharLimit = 100
 		key.Width = 50
@@ -45,7 +45,7 @@ func NewConfig() *Config {
 
 	abc := textinput.New()
 	{
-		abc.Placeholder = "ABC"
+		abc.Placeholder = "Алфавит"
 		abc.Prompt = "> "
 		abc.CharLimit = 100
 		abc.Width = 50
@@ -57,7 +57,7 @@ func NewConfig() *Config {
 
 	sep := textinput.New()
 	{
-		sep.Placeholder = "Separator"
+		sep.Placeholder = "Заполняющий символ"
 		sep.Prompt = "> "
 		sep.CharLimit = 1
 		sep.Width = 10
@@ -155,13 +155,13 @@ func (c *Config) Update(msg tea.Msg) {
 			c.textInputs[c.inputIdx].Focus()
 		case "ctrl+z":
 			c.loadConfig()
-			c.saveRes = "* reloaded"
+			c.saveRes = "* настройки сброшены"
 		case "ctrl+s":
 			err := c.saveConfig()
 			if err != nil {
 				c.saveRes = fmt.Sprintf("* %s", err.Error())
 			} else {
-				c.saveRes = "* saved"
+				c.saveRes = "* настройки сохранены"
 			}
 		}
 	}
@@ -229,26 +229,26 @@ func (c *Config) saveConfig() error {
 }
 
 func (c *Config) View() string {
-	return fmt.Sprintf(`Write key word:
+	return fmt.Sprintf(`Парольная фраза:
 %s %d
 %s
-Separator:
+Заполняющий символ:
 %s
 %s
 
-Write ABC:
+Алфавит:
 %s %d
 %s
-Height: %s %s
-Width:  %s %s
+Высота матрицы: %s %s
+Широта матрицы:  %s %s
 
    (ctrl+s to save configs) (ctrl+z to reload configs)
 %s`,
-		c.textInputs[keyIn].View(), c.textInputs[keyIn].Position(), errorToText(textFieldValidator(c.textInputs[keyIn].Value(), "key")),
-		c.textInputs[sepIn].View(), errorToText(textFieldValidator(c.textInputs[sepIn].Value(), "separator")),
-		c.textInputs[abcIn].View(), c.textInputs[abcIn].Position(), errorToText(textFieldValidator(c.textInputs[abcIn].Value(), "abc")),
-		c.textInputs[heightIn].View(), errorToText(numFieldValidator(c.textInputs[heightIn].Value(), "height")),
-		c.textInputs[widthIn].View(), errorToText(numFieldValidator(c.textInputs[widthIn].Value(), "width")),
+		c.textInputs[keyIn].View(), c.textInputs[keyIn].Position(), errorToText(textFieldValidator(c.textInputs[keyIn].Value(), "Парольная фраза")),
+		c.textInputs[sepIn].View(), errorToText(textFieldValidator(c.textInputs[sepIn].Value(), "Заполняющий символ")),
+		c.textInputs[abcIn].View(), c.textInputs[abcIn].Position(), errorToText(textFieldValidator(c.textInputs[abcIn].Value(), "Алфавит")),
+		c.textInputs[heightIn].View(), errorToText(numFieldValidator(c.textInputs[heightIn].Value(), "Высота матрицы")),
+		c.textInputs[widthIn].View(), errorToText(numFieldValidator(c.textInputs[widthIn].Value(), "Широта матрицы")),
 		c.saveRes,
 	)
 }
@@ -263,16 +263,16 @@ func errorToText(err error) string {
 
 func textFieldValidator(s, field string) error {
 	if len(s) == 0 {
-		return fmt.Errorf("%s must be set", field)
+		return fmt.Errorf("поле '%s' должно быть задано", field)
 	}
 
 	return nil
 }
 
-func numFieldValidator(s, field string) error {
+func numFieldValidator(s, _ string) error {
 	_, err := strconv.ParseInt(s, 10, 64)
 	if err != nil {
-		return fmt.Errorf("%s must be set", field)
+		return fmt.Errorf("значение должно быть задано")
 	}
 
 	return nil

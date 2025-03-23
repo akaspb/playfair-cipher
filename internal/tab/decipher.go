@@ -11,14 +11,14 @@ import (
 
 func NewDecipher(decipherService *decipher.Decipher, separator *rune) *Decipher {
 	ti := textarea.New()
-	ti.Placeholder = "Write your ciphered text"
+	ti.Placeholder = ""
 	ti.SetHeight(8)
 	ti.SetWidth(50)
 	ti.CharLimit = 500
 	ti.Focus()
 
 	to := textarea.New()
-	to.Placeholder = "Deciphered text"
+	to.Placeholder = "Расшифрованный текст"
 	to.SetHeight(8)
 	to.SetWidth(50)
 	ti.CharLimit = 500
@@ -85,22 +85,22 @@ func (d *Decipher) Update(msg tea.Msg) {
 func (d *Decipher) View() string {
 
 	if d.err != nil {
-		return fmt.Sprintf(`Input:
+		return fmt.Sprintf(`Напишите здесь свой зашифрованный текст:
 %s
-Result:
+Расшифрованный текст:
 * %s
-`,
+          (ctrl+v - загрузить из буфера обмена)`,
 			d.ti.View(),
 			d.err.Error(),
 		)
 	}
 
-	return fmt.Sprintf(`Input:
+	return fmt.Sprintf(`Напишите здесь свой зашифрованный текст:
 %s
-Result:
+Расшифрованный текст:
 %s
-            (ctrl+v to load from clipboard)
-             (ctrl+s to save to clipboard)`,
+          (ctrl+v - загрузить из буфера обмена)
+          (ctrl+s - загрузить в  буфера обмена)`,
 		d.ti.View(),
 		d.to.View(),
 	)

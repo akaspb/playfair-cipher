@@ -11,14 +11,14 @@ import (
 
 func NewCipher(cipherService *cipher.Cipher, separator *rune) *Cipher {
 	ti := textarea.New()
-	ti.Placeholder = "Write your text hear"
+	ti.Placeholder = ""
 	ti.SetHeight(8)
 	ti.SetWidth(50)
 	ti.CharLimit = 500
 	ti.Focus()
 
 	to := textarea.New()
-	to.Placeholder = "Ciphered text"
+	to.Placeholder = ""
 	to.SetHeight(8)
 	to.SetWidth(50)
 	ti.CharLimit = 500
@@ -85,22 +85,22 @@ func (c *Cipher) Update(msg tea.Msg) {
 func (c *Cipher) View() string {
 
 	if c.err != nil {
-		return fmt.Sprintf(`Input:
+		return fmt.Sprintf(`Напишите здесь свой текст:
 %s
-Result:
+Зашифрованный текст:
 * %s
-`,
+          (ctrl+v - загрузить из буфера обмена)`,
 			c.ti.View(),
 			c.err.Error(),
 		)
 	}
 
-	return fmt.Sprintf(`Input:
+	return fmt.Sprintf(`Напишите здесь свой текст:
 %s
-Result:
+Зашифрованный текст:
 %s
-            (ctrl+v to load from clipboard)
-             (ctrl+s to save to clipboard)`,
+          (ctrl+v - загрузить из буфера обмена)
+          (ctrl+s - загрузить в  буфера обмена)`,
 		c.ti.View(),
 		c.to.View(),
 	)
