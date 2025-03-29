@@ -24,7 +24,7 @@ const (
 )
 
 var (
-	focusedStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
+	focusedStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#04c77c"))
 	cursorStyle  = focusedStyle
 )
 
