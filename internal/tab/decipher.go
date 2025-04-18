@@ -58,6 +58,8 @@ func (d *Decipher) Update(msg tea.Msg) {
 			ctrlV = true
 		case "ctrl+s":
 			ctrlS = true
+		case "ctrl+d":
+			d.ti.SetValue("")
 		}
 	}
 
@@ -100,7 +102,8 @@ func (d *Decipher) View() string {
 Расшифрованный текст:
 %s
           (ctrl+v - загрузить из буфера обмена)
-           (ctrl+s - загрузить в буфер обмена)`,
+           (ctrl+s - загрузить в буфер обмена)
+                 (ctrl+d - удалить текст)`,
 		d.ti.View(),
 		d.to.View(),
 	)

@@ -58,6 +58,8 @@ func (c *Cipher) Update(msg tea.Msg) {
 			ctrlV = true
 		case "ctrl+s":
 			ctrlS = true
+		case "ctrl+d":
+			c.ti.SetValue("")
 		}
 	}
 
@@ -100,7 +102,8 @@ func (c *Cipher) View() string {
 Зашифрованный текст:
 %s
           (ctrl+v - загрузить из буфера обмена)
-           (ctrl+s - загрузить в буфер обмена)`,
+           (ctrl+s - загрузить в буфер обмена)
+                 (ctrl+d - удалить текст)`,
 		c.ti.View(),
 		c.to.View(),
 	)

@@ -3,7 +3,6 @@ package decipher
 import (
 	"errors"
 	"fmt"
-	"strings"
 
 	"github.com/akaspb/playfair-cipher/internal/keymatrix"
 	"github.com/akaspb/playfair-cipher/internal/model"
@@ -24,27 +23,6 @@ func New(cfg *model.GridConfig) (*Decipher, error) {
 		grid:      grid,
 		positions: positions,
 	}, nil
-}
-
-func (d *Decipher) String() string {
-	if d == nil {
-		return "nil"
-	}
-
-	height := len(d.grid)
-	sb := strings.Builder{}
-	for i := 0; i < height; i++ {
-		_, err := sb.WriteString(string(d.grid[i]))
-		if err != nil {
-			panic(err)
-		}
-
-		if i+1 < height {
-			sb.WriteByte('\n')
-		}
-	}
-
-	return sb.String()
 }
 
 func (d *Decipher) Decode(cipherText string, separator rune) (string, error) {

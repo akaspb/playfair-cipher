@@ -273,7 +273,7 @@ func textFieldValidator(s, field string) error {
 func numFieldValidator(s, _ string) error {
 	_, err := strconv.ParseInt(s, 10, 64)
 	if err != nil {
-		return fmt.Errorf("значение должно быть задано")
+		return fmt.Errorf("значение должно быть задано числом")
 	}
 
 	return nil
