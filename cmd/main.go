@@ -65,9 +65,9 @@ func (a app) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch keypress := msg.String(); keypress {
 		case "ctrl+c", "esc":
 			return a, tea.Quit
-		case "tab" /*, "right"*/ :
+		case "tab":
 			a.activeTab = min(a.activeTab+1, len(a.Tabs)-1)
-		case "shift+tab" /*, "left"*/ :
+		case "shift+tab":
 			a.activeTab = max(a.activeTab-1, 0)
 		}
 	}
