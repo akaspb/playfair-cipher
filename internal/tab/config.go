@@ -35,6 +35,8 @@ func NewConfig() *Config {
 		key.Prompt = "> "
 		key.CharLimit = 100
 		key.Width = 50
+		key.EchoMode = textinput.EchoPassword
+		key.EchoCharacter = '*'
 
 		key.Cursor.Style = cursorStyle
 		key.PromptStyle = focusedStyle
@@ -101,7 +103,12 @@ func NewConfig() *Config {
 		},
 		inputIdx: 0,
 	}
-	c.loadConfig()
+
+	if err := c.loadConfig(); err != nil {
+		log.Fatal(err)
+	}
+
+	c.Done = make(chan struct{}, 1)
 
 	return c
 }
@@ -112,13 +119,11 @@ func (c *Config) loadConfig() error {
 		return err
 	}
 
-	c.CipherCfg = &cfg
-
-	c.textInputs[keyIn].SetValue(cfg.GridConfig.Key)
+	c.textInputs[keyIn].SetValue(cfg.Key)
 	c.textInputs[sepIn].SetValue(string([]rune{*cfg.Separator}))
-	c.textInputs[abcIn].SetValue(string(cfg.GridConfig.Chars))
-	c.textInputs[widthIn].SetValue(strconv.Itoa(cfg.GridConfig.Width))
-	c.textInputs[heightIn].SetValue(strconv.Itoa(cfg.GridConfig.Height))
+	c.textInputs[abcIn].SetValue(string(cfg.Chars))
+	c.textInputs[widthIn].SetValue(strconv.Itoa(cfg.Width))
+	c.textInputs[heightIn].SetValue(strconv.Itoa(cfg.Height))
 
 	return nil
 }
@@ -126,10 +131,13 @@ func (c *Config) loadConfig() error {
 var _ Tab = &Config{}
 
 type Config struct {
+	Done       chan struct{}
 	textInputs map[inputIdx]*textinput.Model
 	inputIdx   inputIdx
 	saveRes    string
-	CipherCfg  *model.Config
+	Grid       *[][]rune
+	Positions  *map[rune]model.Pos
+	Separator  *rune
 }
 
 func (c *Config) Update(msg tea.Msg) {
@@ -210,12 +218,10 @@ func (c *Config) saveConfig() error {
 	}
 
 	cfg := model.Config{
-		GridConfig: &model.GridConfig{
-			Chars:  []rune(abc),
-			Height: height,
-			Width:  width,
-			Key:    key,
-		},
+		Height:    height,
+		Width:     width,
+		Chars:     []rune(abc),
+		Key:       key,
 		Separator: &[]rune(sep)[0],
 	}
 
@@ -223,7 +229,18 @@ func (c *Config) saveConfig() error {
 		log.Fatal(fmt.Errorf("error during creating config file: %w", err))
 	}
 
-	c.CipherCfg = &cfg
+	grid, positions, err := keymatrix.Calculate(
+		cfg.Chars,
+		cfg.Height,
+		cfg.Width,
+		cfg.Key,
+	)
+	if err != nil {
+		return fmt.Errorf("error during grid making: %w", err)
+	}
+
+	c.Grid, c.Positions, c.Separator = &grid, &positions, cfg.Separator
+	c.Done <- struct{}{}
 
 	return nil
 }
@@ -271,9 +288,13 @@ func textFieldValidator(s, field string) error {
 }
 
 func numFieldValidator(s, _ string) error {
-	_, err := strconv.ParseInt(s, 10, 64)
+	num, err := strconv.ParseInt(s, 10, 64)
 	if err != nil {
 		return fmt.Errorf("значение должно быть задано числом")
+	}
+
+	if num <= 0 {
+		return fmt.Errorf("значение должно быть положительным")
 	}
 
 	return nil

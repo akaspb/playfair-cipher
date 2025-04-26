@@ -3,22 +3,17 @@ package decipher
 import (
 	"errors"
 	"fmt"
+	"log"
 
-	"github.com/akaspb/playfair-cipher/internal/keymatrix"
 	"github.com/akaspb/playfair-cipher/internal/model"
 )
 
 type Decipher struct {
-	grid      [][]rune
-	positions map[rune]model.Pos
+	grid      *[][]rune
+	positions *map[rune]model.Pos
 }
 
-func New(cfg *model.GridConfig) (*Decipher, error) {
-	grid, positions, err := keymatrix.Calculate(cfg.Chars, cfg.Height, cfg.Width, cfg.Key)
-	if err != nil {
-		return nil, fmt.Errorf("error during grid making: %w", err)
-	}
-
+func New(grid *[][]rune, positions *map[rune]model.Pos) (*Decipher, error) {
 	return &Decipher{
 		grid:      grid,
 		positions: positions,
@@ -26,22 +21,34 @@ func New(cfg *model.GridConfig) (*Decipher, error) {
 }
 
 func (d *Decipher) Decode(cipherText string, separator rune) (string, error) {
+	if d == nil {
+		log.Fatal("*Decipher instance is nil")
+	}
+
+	if d.grid == nil {
+		log.Fatal("grid==nil")
+	}
+
+	if d.positions == nil {
+		log.Fatal("positions==nil")
+	}
+
 	pairs := []rune(cipherText)
 
 	if len(pairs)%2 == 1 {
 		return "", errors.New("[cipherText] must be even-length string")
 	}
 
-	height, width := len(d.grid), len(d.grid[0])
+	height, width := len(*d.grid), len((*d.grid)[0])
 	decipherPairs := make([]rune, 0, len(pairs))
 	for i := 0; i < len(pairs); i += 2 {
 		char1, char2 := pairs[i], pairs[i+1]
-		pos1, ok := d.positions[char1]
+		pos1, ok := (*d.positions)[char1]
 		if !ok {
 			return "", fmt.Errorf("char '%c' not found in grid", char1)
 		}
 
-		pos2, ok := d.positions[char2]
+		pos2, ok := (*d.positions)[char2]
 		if !ok {
 			return "", fmt.Errorf("char '%c' not found in grid", char2)
 		}
@@ -51,8 +58,8 @@ func (d *Decipher) Decode(cipherText string, separator rune) (string, error) {
 		}
 
 		pos1To, pos2To := procPair(pos1, pos2, height, width)
-		char1To := d.grid[pos1To.I()][pos1To.J()]
-		char2To := d.grid[pos2To.I()][pos2To.J()]
+		char1To := (*d.grid)[pos1To.I()][pos1To.J()]
+		char2To := (*d.grid)[pos2To.I()][pos2To.J()]
 
 		decipherPairs = append(decipherPairs, char1To, char2To)
 	}
