@@ -17,8 +17,8 @@ func NewCipher(cipherService *cipher.Cipher, separator *rune) *Cipher {
 	fi := textinput.New()
 	fi.Placeholder = "Название файла с расширением"
 	fi.Prompt = "> "
-	fi.CharLimit = 100
-	fi.Width = 50
+	fi.CharLimit = 64
+	fi.Width = 64
 	fi.Cursor.Style = cursorStyle
 	fi.PromptStyle = focusedStyle
 	fi.TextStyle = focusedStyle
@@ -52,14 +52,16 @@ type Cipher struct {
 	cipherService *cipher.Cipher
 	separator     *rune
 
-	fi  textinput.Model
-	ti  textarea.Model
-	to  textarea.Model
-	err error
+	fileIsSaved bool
+	fi          textinput.Model
+	ti          textarea.Model
+	to          textarea.Model
+	err         error
 }
 
 func (c *Cipher) Update(msg tea.Msg) {
 	c.err = nil
+	c.fileIsSaved = false
 
 	var (
 		ctrlV    = false
@@ -126,7 +128,12 @@ func (c *Cipher) Update(msg tea.Msg) {
 	}
 
 	if saveText {
-		c.err = saveFile(c.fi.Value(), ciphered)
+		err := saveFile(c.fi.Value(), ciphered)
+		if err != nil {
+			c.err = err
+		} else {
+			c.fileIsSaved = true
+		}
 	}
 }
 
@@ -155,6 +162,9 @@ func getWorkingDir() (string, error) {
 func (c *Cipher) View() string {
 	sb := strings.Builder{}
 	sb.WriteString(c.fi.View())
+	if c.fileIsSaved {
+		sb.WriteString("* файл записан")
+	}
 	sb.WriteString("\n")
 
 	if c.err != nil {

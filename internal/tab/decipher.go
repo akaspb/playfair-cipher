@@ -15,8 +15,8 @@ func NewDecipher(decipherService *decipher.Decipher, separator *rune) *Decipher 
 	fi := textinput.New()
 	fi.Placeholder = "Название файла с расшиением"
 	fi.Prompt = "> "
-	fi.CharLimit = 100
-	fi.Width = 50
+	fi.CharLimit = 64
+	fi.Width = 64
 	fi.Cursor.Style = cursorStyle
 	fi.PromptStyle = focusedStyle
 	fi.TextStyle = focusedStyle
@@ -50,14 +50,16 @@ type Decipher struct {
 	decipherService *decipher.Decipher
 	separator       *rune
 
-	fi  textinput.Model
-	ti  textarea.Model
-	to  textarea.Model
-	err error
+	fileIsSaved bool
+	fi          textinput.Model
+	ti          textarea.Model
+	to          textarea.Model
+	err         error
 }
 
 func (d *Decipher) Update(msg tea.Msg) {
-	d.ti, _ = d.ti.Update(msg)
+	d.err = nil
+	d.fileIsSaved = false
 
 	var (
 		ctrlV    = false
@@ -116,7 +118,6 @@ func (d *Decipher) Update(msg tea.Msg) {
 		d.err = err
 		return
 	}
-	d.err = nil
 
 	d.to.SetValue(deciphered)
 
@@ -125,13 +126,21 @@ func (d *Decipher) Update(msg tea.Msg) {
 	}
 
 	if saveText {
-		d.err = saveFile(d.fi.Value(), deciphered)
+		err = saveFile(d.fi.Value(), deciphered)
+		if err != nil {
+			d.err = err
+		} else {
+			d.fileIsSaved = true
+		}
 	}
 }
 
 func (d *Decipher) View() string {
 	sb := strings.Builder{}
 	sb.WriteString(d.fi.View())
+	if d.fileIsSaved {
+		sb.WriteString("* файл записан")
+	}
 	sb.WriteString("\n")
 
 	if d.err != nil {
