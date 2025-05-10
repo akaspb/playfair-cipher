@@ -14,6 +14,6 @@ func (a About) Update(tea.Msg) {}
 
 func (a About) View() string {
 	return `Шифр Плейфера
-Версия: 1.0.0-ru
+Версия: 1.1.0-ru
 Питер А. В.`
 }
