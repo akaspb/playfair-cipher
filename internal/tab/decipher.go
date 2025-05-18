@@ -2,23 +2,34 @@ package tab
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/akaspb/playfair-cipher/internal/decipher"
 	"github.com/atotto/clipboard"
 	"github.com/charmbracelet/bubbles/textarea"
+	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
 func NewDecipher(decipherService *decipher.Decipher, separator *rune) *Decipher {
+	fi := textinput.New()
+	fi.Placeholder = "file name with extension"
+	fi.Prompt = "> "
+	fi.CharLimit = 64
+	fi.Width = 64
+	fi.Cursor.Style = cursorStyle
+	fi.PromptStyle = focusedStyle
+	fi.TextStyle = focusedStyle
+
 	ti := textarea.New()
-	ti.Placeholder = "Write your ciphered text"
+	ti.Placeholder = ""
 	ti.SetHeight(8)
 	ti.SetWidth(50)
 	ti.CharLimit = 500
 	ti.Focus()
 
 	to := textarea.New()
-	to.Placeholder = "Deciphered text"
+	to.Placeholder = ""
 	to.SetHeight(8)
 	to.SetWidth(50)
 	ti.CharLimit = 500
@@ -27,6 +38,7 @@ func NewDecipher(decipherService *decipher.Decipher, separator *rune) *Decipher 
 		decipherService: decipherService,
 		separator:       separator,
 
+		fi: fi,
 		ti: ti,
 		to: to,
 	}
@@ -38,17 +50,22 @@ type Decipher struct {
 	decipherService *decipher.Decipher
 	separator       *rune
 
-	ti  textarea.Model
-	to  textarea.Model
-	err error
+	fileIsSaved bool
+	fi          textinput.Model
+	ti          textarea.Model
+	to          textarea.Model
+	err         error
 }
 
 func (d *Decipher) Update(msg tea.Msg) {
-	d.ti, _ = d.ti.Update(msg)
+	d.err = nil
+	d.fileIsSaved = false
 
 	var (
-		ctrlV = false
-		ctrlS = false
+		ctrlV    = false
+		ctrlS    = false
+		loadText = false
+		saveText = false
 	)
 
 	switch msg := msg.(type) {
@@ -58,6 +75,25 @@ func (d *Decipher) Update(msg tea.Msg) {
 			ctrlV = true
 		case "ctrl+s":
 			ctrlS = true
+		case "ctrl+r":
+			loadText = true
+		case "ctrl+w":
+			saveText = true
+		case "ctrl+d":
+			d.ti.SetValue("")
+		case "up":
+			d.fi.Focus()
+			d.ti.Blur()
+		case "down":
+			d.fi.Blur()
+			d.ti.Focus()
+		default:
+			if d.fi.Focused() {
+				d.fi, _ = d.fi.Update(msg)
+			}
+			if d.ti.Focused() {
+				d.ti, _ = d.ti.Update(msg)
+			}
 		}
 	}
 
@@ -68,40 +104,66 @@ func (d *Decipher) Update(msg tea.Msg) {
 		}
 	}
 
+	if loadText {
+		text, err := loadFile(d.fi.Value())
+		if err != nil {
+			d.err = err
+		} else {
+			d.ti.SetValue(text)
+		}
+	}
+
 	deciphered, err := d.decipherService.Decode(d.ti.Value(), *d.separator)
 	if err != nil {
 		d.err = err
 		return
 	}
-	d.err = nil
 
 	d.to.SetValue(deciphered)
 
 	if ctrlS {
 		clipboard.WriteAll(deciphered)
 	}
+
+	if saveText {
+		err = saveFile(d.fi.Value(), deciphered)
+		if err != nil {
+			d.err = err
+		} else {
+			d.fileIsSaved = true
+		}
+	}
 }
 
 func (d *Decipher) View() string {
+	sb := strings.Builder{}
+	sb.WriteString(d.fi.View())
+	if d.fileIsSaved {
+		sb.WriteString("* deciphered text saved to file")
+	}
+	sb.WriteString("\n")
 
 	if d.err != nil {
-		return fmt.Sprintf(`Input:
+		sb.WriteString(fmt.Sprintf(`Ciphertext:
 %s
-Result:
+Deciphered text:
 * %s
-`,
+     (ctrl+v / ctrl+r - load from clipboard / file)`,
 			d.ti.View(),
 			d.err.Error(),
-		)
+		))
+	} else {
+		sb.WriteString(fmt.Sprintf(`Ciphertext:
+%s
+Deciphered text:
+%s
+     (ctrl+v / ctrl+r - load from clipboard / file)
+      (ctrl+s / ctrl+w - save to clipboard / file)
+			 (ctrl+d - clear ciphertext)`,
+			d.ti.View(),
+			d.to.View(),
+		))
 	}
 
-	return fmt.Sprintf(`Input:
-%s
-Result:
-%s
-            (ctrl+v to load from clipboard)
-             (ctrl+s to save to clipboard)`,
-		d.ti.View(),
-		d.to.View(),
-	)
+	return sb.String()
 }

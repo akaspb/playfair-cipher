@@ -8,9 +8,12 @@ build:
 
 run:
 	./${EXEC_PATH}
+
 full: build run
+
 conf:
 	go run cmd/make-config/en/main.go
+
 conf-ru:
 	go run cmd/make-config/ru/main.go
 

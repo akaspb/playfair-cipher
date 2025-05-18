@@ -31,10 +31,12 @@ var (
 func NewConfig() *Config {
 	key := textinput.New()
 	{
-		key.Placeholder = "Key"
+		key.Placeholder = "write your key here"
 		key.Prompt = "> "
 		key.CharLimit = 100
 		key.Width = 50
+		key.EchoMode = textinput.EchoPassword
+		key.EchoCharacter = '*'
 
 		key.Cursor.Style = cursorStyle
 		key.PromptStyle = focusedStyle
@@ -45,7 +47,7 @@ func NewConfig() *Config {
 
 	abc := textinput.New()
 	{
-		abc.Placeholder = "ABC"
+		abc.Placeholder = "alphabet"
 		abc.Prompt = "> "
 		abc.CharLimit = 100
 		abc.Width = 50
@@ -57,10 +59,10 @@ func NewConfig() *Config {
 
 	sep := textinput.New()
 	{
-		sep.Placeholder = "Separator"
+		sep.Placeholder = "separator character"
 		sep.Prompt = "> "
 		sep.CharLimit = 1
-		sep.Width = 10
+		sep.Width = 20
 
 		sep.Cursor.Style = cursorStyle
 		sep.PromptStyle = focusedStyle
@@ -101,7 +103,12 @@ func NewConfig() *Config {
 		},
 		inputIdx: 0,
 	}
-	c.loadConfig()
+
+	if err := c.loadConfig(); err != nil {
+		log.Fatal(err)
+	}
+
+	c.Done = make(chan struct{}, 1)
 
 	return c
 }
@@ -112,13 +119,11 @@ func (c *Config) loadConfig() error {
 		return err
 	}
 
-	c.CipherCfg = &cfg
-
-	c.textInputs[keyIn].SetValue(cfg.GridConfig.Key)
+	c.textInputs[keyIn].SetValue(cfg.Key)
 	c.textInputs[sepIn].SetValue(string([]rune{*cfg.Separator}))
-	c.textInputs[abcIn].SetValue(string(cfg.GridConfig.Chars))
-	c.textInputs[widthIn].SetValue(strconv.Itoa(cfg.GridConfig.Width))
-	c.textInputs[heightIn].SetValue(strconv.Itoa(cfg.GridConfig.Height))
+	c.textInputs[abcIn].SetValue(string(cfg.Chars))
+	c.textInputs[widthIn].SetValue(strconv.Itoa(cfg.Width))
+	c.textInputs[heightIn].SetValue(strconv.Itoa(cfg.Height))
 
 	return nil
 }
@@ -126,10 +131,13 @@ func (c *Config) loadConfig() error {
 var _ Tab = &Config{}
 
 type Config struct {
+	Done       chan struct{}
 	textInputs map[inputIdx]*textinput.Model
 	inputIdx   inputIdx
 	saveRes    string
-	CipherCfg  *model.Config
+	Grid       *[][]rune
+	Positions  *map[rune]model.Pos
+	Separator  *rune
 }
 
 func (c *Config) Update(msg tea.Msg) {
@@ -155,13 +163,13 @@ func (c *Config) Update(msg tea.Msg) {
 			c.textInputs[c.inputIdx].Focus()
 		case "ctrl+z":
 			c.loadConfig()
-			c.saveRes = "* reloaded"
+			c.saveRes = "* settings restored"
 		case "ctrl+s":
 			err := c.saveConfig()
 			if err != nil {
 				c.saveRes = fmt.Sprintf("* %s", err.Error())
 			} else {
-				c.saveRes = "* saved"
+				c.saveRes = "* settings saved"
 			}
 		}
 	}
@@ -177,23 +185,23 @@ func (c *Config) saveConfig() error {
 		abc = c.textInputs[abcIn].Value()
 	)
 
-	if err := textFieldValidator(key, "key"); err != nil {
+	if err := textFieldValidator(key, "Key"); err != nil {
 		return err
 	}
 
-	if err := textFieldValidator(sep, "separator"); err != nil {
+	if err := textFieldValidator(sep, "Separator character"); err != nil {
 		return err
 	}
 
-	if err := textFieldValidator(abc, "abc"); err != nil {
+	if err := textFieldValidator(abc, "Alphabet"); err != nil {
 		return err
 	}
 
-	if err := numFieldValidator(c.textInputs[heightIn].Value(), "height"); err != nil {
+	if err := numFieldValidator(c.textInputs[heightIn].Value(), "Matrix height"); err != nil {
 		return err
 	}
 
-	if err := numFieldValidator(c.textInputs[widthIn].Value(), "width"); err != nil {
+	if err := numFieldValidator(c.textInputs[widthIn].Value(), "Matrix width"); err != nil {
 		return err
 	}
 
@@ -210,12 +218,10 @@ func (c *Config) saveConfig() error {
 	}
 
 	cfg := model.Config{
-		GridConfig: &model.GridConfig{
-			Chars:  []rune(abc),
-			Height: height,
-			Width:  width,
-			Key:    key,
-		},
+		Height:    height,
+		Width:     width,
+		Chars:     []rune(abc),
+		Key:       key,
 		Separator: &[]rune(sep)[0],
 	}
 
@@ -223,32 +229,44 @@ func (c *Config) saveConfig() error {
 		log.Fatal(fmt.Errorf("error during creating config file: %w", err))
 	}
 
-	c.CipherCfg = &cfg
+	grid, positions, err := keymatrix.Calculate(
+		cfg.Chars,
+		cfg.Height,
+		cfg.Width,
+		cfg.Key,
+	)
+	if err != nil {
+		return fmt.Errorf("error during grid making: %w", err)
+	}
+
+	c.Grid, c.Positions, c.Separator = &grid, &positions, cfg.Separator
+	c.Done <- struct{}{}
 
 	return nil
 }
 
 func (c *Config) View() string {
-	return fmt.Sprintf(`Write key word:
+	return fmt.Sprintf(`Key:
 %s %d
 %s
-Separator:
+Separator character:
 %s
 %s
 
-Write ABC:
+Alphabet:
 %s %d
 %s
-Height: %s %s
-Width:  %s %s
+Matrix height: %s %s
+Matrix width:  %s %s
 
-   (ctrl+s to save configs) (ctrl+z to reload configs)
+                (ctrl+s - save changes)
+               (ctrl+z - restore settings)    
 %s`,
-		c.textInputs[keyIn].View(), c.textInputs[keyIn].Position(), errorToText(textFieldValidator(c.textInputs[keyIn].Value(), "key")),
-		c.textInputs[sepIn].View(), errorToText(textFieldValidator(c.textInputs[sepIn].Value(), "separator")),
-		c.textInputs[abcIn].View(), c.textInputs[abcIn].Position(), errorToText(textFieldValidator(c.textInputs[abcIn].Value(), "abc")),
-		c.textInputs[heightIn].View(), errorToText(numFieldValidator(c.textInputs[heightIn].Value(), "height")),
-		c.textInputs[widthIn].View(), errorToText(numFieldValidator(c.textInputs[widthIn].Value(), "width")),
+		c.textInputs[keyIn].View(), c.textInputs[keyIn].Position(), errorToText(textFieldValidator(c.textInputs[keyIn].Value(), "Key")),
+		c.textInputs[sepIn].View(), errorToText(textFieldValidator(c.textInputs[sepIn].Value(), "Separator character")),
+		c.textInputs[abcIn].View(), c.textInputs[abcIn].Position(), errorToText(textFieldValidator(c.textInputs[abcIn].Value(), "Alphabet")),
+		c.textInputs[heightIn].View(), errorToText(numFieldValidator(c.textInputs[heightIn].Value(), "Matrix height")),
+		c.textInputs[widthIn].View(), errorToText(numFieldValidator(c.textInputs[widthIn].Value(), "Matrix width")),
 		c.saveRes,
 	)
 }
@@ -263,16 +281,20 @@ func errorToText(err error) string {
 
 func textFieldValidator(s, field string) error {
 	if len(s) == 0 {
-		return fmt.Errorf("%s must be set", field)
+		return fmt.Errorf("field '%s' must be settled", field)
 	}
 
 	return nil
 }
 
-func numFieldValidator(s, field string) error {
-	_, err := strconv.ParseInt(s, 10, 64)
+func numFieldValidator(s, _ string) error {
+	num, err := strconv.ParseInt(s, 10, 64)
 	if err != nil {
-		return fmt.Errorf("%s must be set", field)
+		return fmt.Errorf("value must be digital")
+	}
+
+	if num <= 0 {
+		return fmt.Errorf("value must be positive")
 	}
 
 	return nil
